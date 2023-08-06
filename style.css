@@ -1,20 +1,125 @@
+/* Html Reset*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+/* My code starts here */
+
+:root {
+
+    /*fonts*/
+    --main-font: 'Roboto', sans-serif;
+    --light-font: 'Flamenco', cursive;
+    --text-font: 'Hind Guntur', sans-serif;
+    font-size: 5vh;
+
+    /*colors*/
+    --dark-color: #0A0908;
+    --light-color: #F1E4E8;
+    --player-one-color: #9E6B90;
+    --player-two-color: #4eb3c0;
+    --board-color: #FEB39A;
+
+
+}
+
+* {
+    box-sizing: border-box;
+    background-color: var(--light-color);
+  }
+
+#general-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1 {
+    font-family: var(--main-font);
+    font-size: 2rem;
+    color: var(--dark-color);
+}
+
 #board-container {
     display: grid;
-    grid-template-columns: auto auto auto;
-    grid-template-rows: auto auto auto;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
     gap: 10px;
-    width: 400px;
-    height: 400px;
+    width: 380px;
+    height: 380px;
 }
 
 .board-cell {
-    background-color: aquamarine;
+    background-color: var(--board-color);
+    padding: 16px;
+    border-radius: 7px;
+    position: relative;
 }
 
-.board-cell.red {
-    background-color: brown;
+.board-cell.marked {
+    padding: 0px
 }
 
-.board-cell.blue {
-    background-color: darkblue;
+.board-cell.marked.player-one {
+    background-color: var(--player-one-color);
 }
+
+.board-cell.marked.player-two {
+    background-color: var(--player-two-color);
+}
+
+polyline, path {
+    fill:inherit;
+    stroke:inherit;
+    }
+
+.marker {
+    height: 114px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: transparent;
+}
+
