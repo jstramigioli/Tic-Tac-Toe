@@ -3,7 +3,6 @@ const gameBoard = (() => {
     const columnNumber = 3;
     const board = [];
     const boardContainer = document.querySelector('#board-container')
-    let cellsFilled = 0
 
     const cell = (row, column) => {
         let value = 0
@@ -44,7 +43,6 @@ const gameBoard = (() => {
                   }
             else {
                 cellDOM.classList.add('marked')
-                cellsFilled += 1
                 if (cell.value == 1) {
                     cellDOM.classList.add('player-one')
                     if (cellDOM.childElementCount == 0) {
@@ -103,13 +101,11 @@ const gameBoard = (() => {
     };
 
     const updateBoard = () => {
-        let cellsFilled = 0
         for (let i = 0 ; i < rowNumber ; i++) {
             for (let j = 0 ; j < columnNumber ; j++) {
                 board[i][j].updateCellinDOM(board[i][j])
             }
         }  
-        if (cellsFilled >= (rowNumber*columnNumber)) {game.tie == true}
     }
 
     const clearBoard = () => {
@@ -204,7 +200,6 @@ const player = ((name, index, color) => {
             const emptyCells = gameBoard.getEmptyCells()
             const randomMove = () => {
                 const randomIndex = Math.floor(Math.random() * emptyCells.length);
-                console.log('mal movimiento')
                 return emptyCells[randomIndex]
             }
 
@@ -242,7 +237,6 @@ const player = ((name, index, color) => {
                     const randomIndex = Math.floor(Math.random() * priority3.length);
                     return priority3[randomIndex]
                 }
-                console.log('mal movimiento')
                 return randomMove()
             }
 
@@ -348,24 +342,24 @@ const game = (() => {
     showYourTurn(game.activePlayer, game.inactivePlayer)
    }
 
-
-
    const playerMove = (cell) => {
     let player = game.activePlayer
     cell ? cell.value = player.index : null
     if (game.checkIfWin()) {win(game.activePlayer, game.checkIfWin())}
+    else if (checkIfTie() == true) {
+        addResultMessage('tie')
+        gameBoard.updateBoard()
+        endGame()
+    }
     else    { changeActivePlayer()
-            console.log('turno de '+game.activePlayer.name)
             lastMove = cell.cellID
             gameBoard.updateBoard()
-            if (game.tie) {
-                addResultMessage('tie')
-                endGame()
-            }
-            else if (game.activePlayer.aiEnabled == true) {
+            
+            if (game.activePlayer.aiEnabled == true) {
                 let delay = Math.floor(Math.random() * (2000 - 100 + 1)) + 100
                 setTimeout(aiMove, delay) 
-    }}
+            }
+        }
    }
 
    const undoMove = () => {
@@ -400,6 +394,18 @@ const game = (() => {
     showYourTurn(game.activePlayer, game.inactivePlayer)
    }
 
+   const checkIfTie = () => {
+    let filledCells = 0
+    for (let i = 0 ; i < gameBoard.rowNumber ; i++) {
+        for (let j = 0 ; j < gameBoard.columnNumber ; j++) {
+            if (gameBoard.board[i][j].value > 0) {
+                filledCells += 1
+            }
+        }
+    }  
+    if (filledCells >= 9) {return true}
+    else return false
+   }
 
    const checkIfWin = () => {
     const checkEqualValues = (line) => {
@@ -444,6 +450,7 @@ const game = (() => {
 
    const addResultMessage = (winner) => {
     const resultMessage = document.createElement('p')
+    resultMessage.classList.add('result-message')
     if (winner == 'tie') {
         resultMessage.textContent = `It's a tie!`
     }
@@ -500,7 +507,7 @@ const game = (() => {
 })();
 
 
-const buttons = (() => {
+const ui = (() => {
 
     const btnContainer = document.querySelector('#button-container')
 
@@ -577,16 +584,19 @@ const buttons = (() => {
             editButton[i].addEventListener('click', editNameListener)
         }
     }
+
+    const initGame = () => {
+        createNewGameBtn()
+        addEditListener()
+    }
     
 
     return {
-        createNewGameBtn,
-        addEditListener
+        initGame
     }
 })()
 
-buttons.createNewGameBtn()
-buttons.addEditListener()
+ui.initGame()
 game.newGame()
 
 

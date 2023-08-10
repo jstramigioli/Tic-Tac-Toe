@@ -154,6 +154,11 @@ h1 {
 
 }
 
+.result-message {
+  font-family: var(--text-font);
+  color: var(--dark-color);
+}
+
   /*Player data*/
 
   #player1 {
