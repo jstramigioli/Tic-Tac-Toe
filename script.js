@@ -7,16 +7,17 @@ const gameBoard = (() => {
 
     const cell = (row, column) => {
         let value = 0
+        let winner = false
         const cellRow = row;
         const cellColumn = column;
         const cellID = [cellRow, cellColumn]
+        let cellDiv
 
         const AddCellToDOM = () => {
-            const cellDiv = document.createElement('div');
+            cellDiv = document.createElement('div');
             cellDiv.classList.add('board-cell')
             cellDiv.dataset.cellId = cellID
-            cellDiv.addEventListener('click', function (e) {
-                CellListener(e, board[cellRow][cellColumn])})
+            addEventToCell()
             boardContainer.appendChild(cellDiv)
         }
 
@@ -24,8 +25,6 @@ const gameBoard = (() => {
             let cellDOM = boardContainer.querySelector('[data-cell-id="'+cell.cellID+'"]')
 
             const addSvgToCell = (cell, marker) => {
-                /*const svg = document.createElement('img')
-                svg.src = 'img/' + marker + '.svg'*/
                 const svg = document.createElement('object')
                 svg.type = 'image/svg+xml'
                 svg.data = 'img/' + marker + '.svg' 
@@ -41,6 +40,7 @@ const gameBoard = (() => {
                         cellDOM.classList.remove('player-two')
                         cellDOM.removeChild(cellDOM.children[0])
                     }
+                    cellDOM.classList.remove('winner')
                   }
             else {
                 cellDOM.classList.add('marked')
@@ -57,6 +57,9 @@ const gameBoard = (() => {
                      addSvgToCell(cellDOM, 'circle')
                     }
                 }
+                if (cell.winner == true) {
+                    cellDOM.classList.add('winner')
+                }
             }
         }
 
@@ -64,18 +67,29 @@ const gameBoard = (() => {
             updateCellinDOM(cell, 0)
         }
 
-        const CellListener = (e, cell) => {
-            if (cell.value == 0 && game.aiPlaying == false) {
-                game.playerMove(cell)
+        const cellListener= (e) => {
+            let cell = board[cellRow][cellColumn]
+                if (cell.value == 0 && !game.activePlayer.aiEnabled) {
+                    game.playerMove(cell)
+                }
             }
+
+        const addEventToCell = () => {
+            cellDiv.addEventListener('click', cellListener)
         }
+
+        const removeEventFromCell = () => {
+               cellDiv.removeEventListener('click', cellListener)
+            }
         
         return {value, 
                 AddCellToDOM, 
                 updateCellinDOM,
                 clearCell, 
-                cellID}
-    };
+                cellID,
+                removeEventFromCell,
+                addEventToCell}
+    }
 
     const createBoard = () => {
         for (let i = 0 ; i < rowNumber ; i++) {
@@ -95,25 +109,34 @@ const gameBoard = (() => {
                 board[i][j].updateCellinDOM(board[i][j])
             }
         }  
-        if (cellsFilled >= (rowNumber*columnNumber)) {game.tie()}
+        if (cellsFilled >= (rowNumber*columnNumber)) {game.tie == true}
     }
 
     const clearBoard = () => {
         for (let i = 0 ; i < rowNumber ; i++) {
             for (let j = 0 ; j < columnNumber ; j++) {
                 board[i][j].value = 0
+                board[i][j].winner = false
             }
         }
         updateBoard()
     }
 
-    const removeEventListener = () => {
-        let cellDivs = boardContainer.querySelectorAll('.board-cell')
-        for (let i = 0 ; i < cellDivs.length ; i++) {
-           cellDivs[i].removeEventListener('click', function (e) {
-            CellListener(e, board[cellRow][cellColumn])})
-        }
+    const removeListenerOnAllBoard = () => {
+        for (let i = 0 ; i < rowNumber ; i++) {
+            for (let j = 0 ; j < columnNumber ; j++) {
+                board[i][j].removeEventFromCell()
+            }
+         }
     };
+
+    const addListenerOnAllBoard = () => {
+        for (let i = 0 ; i < rowNumber ; i++) {
+            for (let j = 0 ; j < columnNumber ; j++) {
+                board[i][j].addEventToCell()
+            }
+         }
+    }
 
     const getRow = (index) => {
         return board[index]
@@ -147,7 +170,6 @@ const gameBoard = (() => {
     const getEmptyCells = () => {
         let emptyCells = []
         for (let i = 0 ; i < board.length ; i++) {
-           // emptyCells.push(board[i].filter(cell => cell.value == 0))
            for (let j = 0 ; j < board[i].length ; j++) {
             board[i][j].value == 0 ? emptyCells.push(board[i][j]) : null
            }
@@ -162,7 +184,8 @@ const gameBoard = (() => {
         cell,
         createBoard,
         updateBoard,
-        removeEventListener,
+        removeListenerOnAllBoard,
+        addListenerOnAllBoard,
         clearBoard,
         getRow,
         getColumn,
@@ -174,13 +197,14 @@ const gameBoard = (() => {
 const player = ((name, index, color) => {
     let score = 0
     let aiEnabled = false
-    let difficulty = 'hard'
+    let difficulty = 'Intermediate'
     
     const ai = (() => {
         const selectedMove = () => {
             const emptyCells = gameBoard.getEmptyCells()
             const randomMove = () => {
                 const randomIndex = Math.floor(Math.random() * emptyCells.length);
+                console.log('mal movimiento')
                 return emptyCells[randomIndex]
             }
 
@@ -198,16 +222,16 @@ const player = ((name, index, color) => {
 
                 for (let i = 0 ; i < emptyCells.length ; i++) {
                     switch (true) {
-                        case amIGoingToWin(emptyCells[i]):
+                        case amIGoingToWin(emptyCells[i]).length > 0:
                             return emptyCells[i]
-                        case isRivalGoingToWin(emptyCells[i]):
+                        case isRivalGoingToWin(emptyCells[i]).length > 0:
                             priority1.push(emptyCells[i]);
                             break;
                         case isCenter(emptyCells[i]):
-                            priority2.push(emptyCells[i]);
+                            priority2.push(emptyCells[i]).length > 0;
                             break;
                         case isCorner(emptyCells[i]):
-                            priority3.push(emptyCells[i]);
+                            priority3.push(emptyCells[i]).length > 0;
                             break;
                     }
                 }
@@ -218,21 +242,22 @@ const player = ((name, index, color) => {
                     const randomIndex = Math.floor(Math.random() * priority3.length);
                     return priority3[randomIndex]
                 }
+                console.log('mal movimiento')
                 return randomMove()
             }
 
             switch (true) {
-                case difficulty == 'easy':
+                case game.activePlayer.difficulty == 'Easy':
                     return randomMove();
-                case difficulty == 'intermediate':
+                case game.activePlayer.difficulty == 'Intermediate':
                     return intermediateMove()
-                case difficulty == 'hard':
+                case game.activePlayer.difficulty == 'Hard':
                     return correctMove();
             }
         }
 
         const amIGoingToWin = (cell) => {
-            cell.value = index
+            cell.value = game.activePlayer.index
             const checkIfWin = game.checkIfWin()
             cell.value = 0
             return checkIfWin
@@ -255,26 +280,38 @@ const player = ((name, index, color) => {
 
         return {
             selectedMove,
+            difficulty
         }
     })()
 
-    return {name, index, score, color, ai, aiEnabled};
+   const enableOrDisableAi = function (e) {
+    
+    if (e.target.id == `toggle-player${this.index}`) {
+        if (e.target.checked) {
+            this.aiEnabled = true;
+            if (game.activePlayer === this) {
+                game.aiMove();
+            }
+        } else {
+            this.aiEnabled = false;
+        }
+    }
+    };
+
+    return {name, index, score, color, ai, aiEnabled, enableOrDisableAi, difficulty};
 
 });
 
 
 const game = (() => {
-   const player1 = player('Julian', 1, 'red')
-   const player2 = player('Pablina', 2, 'blue')
-
-   let aiPlaying = false
-
-    player2.aiEnabled = true
+   const player1 = player('Player 1', 1, 'var(--player-one-color)')
+   const player2 = player('Player 2', 2, 'var(--player-two-color)')
 
    let activePlayer = player1
    let inactivePlayer = player2
 
    let lastMove
+   let lastFirstPlayer = player2
 
    const newGame = () => {
     if (gameBoard.board.length == 0) { 
@@ -283,24 +320,52 @@ const game = (() => {
     }
         else {
             gameBoard.clearBoard()
+            gameBoard.addListenerOnAllBoard()
         }
-    game.activePlayer = player1
-    game.aiPlaying = false
-   }
-
-   const playerMove = (cell) => {
-    let player = game.activePlayer
-    cell.value = player.index
-    if (game.checkIfWin()) {win(game.activePlayer)}
-    changeActivePlayer()
-    console.log('turno de '+game.activePlayer.name)
-    lastMove = cell.cellID
-    gameBoard.updateBoard()
-    if (game.activePlayer.aiEnabled == true) {
-        game.aiPlaying = true
+    if (lastFirstPlayer == player2) { 
+        game.activePlayer = player1
+        game.inactivePlayer = player2
+        lastFirstPlayer = player1
+         }
+    else {
+        game.activePlayer = player2
+        game.inactivePlayer = player1
+        lastFirstPlayer = player2
+        }
+    if (game.activePlayer.aiEnabled) {
         let delay = Math.floor(Math.random() * (2000 - 100 + 1)) + 100
         setTimeout(aiMove, delay) 
     }
+
+    const removeResultMessage = () => {
+        resultContainer = document.getElementById('result-container')
+        if (resultContainer.children.length > 0) {
+            resultContainer.removeChild(resultContainer.children[0])
+        }
+    }
+    
+    removeResultMessage()
+    showYourTurn(game.activePlayer, game.inactivePlayer)
+   }
+
+
+
+   const playerMove = (cell) => {
+    let player = game.activePlayer
+    cell ? cell.value = player.index : null
+    if (game.checkIfWin()) {win(game.activePlayer, game.checkIfWin())}
+    else    { changeActivePlayer()
+            console.log('turno de '+game.activePlayer.name)
+            lastMove = cell.cellID
+            gameBoard.updateBoard()
+            if (game.tie) {
+                addResultMessage('tie')
+                endGame()
+            }
+            else if (game.activePlayer.aiEnabled == true) {
+                let delay = Math.floor(Math.random() * (2000 - 100 + 1)) + 100
+                setTimeout(aiMove, delay) 
+    }}
    }
 
    const undoMove = () => {
@@ -312,10 +377,15 @@ const game = (() => {
    }
 
    const aiMove = () => {
-    if (game.aiPlaying == true) {
+    if (gameBoard.board.length > 0)
     playerMove(activePlayer.ai.selectedMove())
-    game.aiPlaying = false
-    }
+   }
+
+   const showYourTurn = (activePlayer, inactivePlayer) => {
+    const activePlayerContainer = document.querySelector('#player'+activePlayer.index)
+    activePlayerContainer.classList.add('your-turn')
+    const inactivePlayerContainer = document.querySelector('#player'+inactivePlayer.index)
+    inactivePlayerContainer.classList.remove('your-turn')
    }
 
    const changeActivePlayer = () => {
@@ -327,6 +397,7 @@ const game = (() => {
     game.activePlayer = player1
     game.inactivePlayer = player2
     }
+    showYourTurn(game.activePlayer, game.inactivePlayer)
    }
 
 
@@ -338,13 +409,13 @@ const game = (() => {
                 return false
             } 
         }
-        return true
+        return line
     }
 
     let rowWin = () => {
         for (let i = 0; i < gameBoard.rowNumber; i++) {
           if (checkEqualValues(gameBoard.getRow(i))) {
-            return true;
+            return gameBoard.getRow(i);
           }
         }
         return false;
@@ -353,48 +424,80 @@ const game = (() => {
     let columnWin = () => {
         for (let i = 0; i < gameBoard.columnNumber; i++) {
             if (checkEqualValues(gameBoard.getColumn(i))) {
-              return true;
+              return gameBoard.getColumn(i);
             }
           }
           return false; 
     }
 
     let diagWin = () => {
-        return    checkEqualValues(gameBoard.getDiagonal(1)) || checkEqualValues(gameBoard.getDiagonal(2))
-    }
+        if (checkEqualValues(gameBoard.getDiagonal(1))) {
+            return checkEqualValues(gameBoard.getDiagonal(1))
+        }
+        else if (checkEqualValues(gameBoard.getDiagonal(2))) {
+            return checkEqualValues(gameBoard.getDiagonal(2))
+        }
+        }  
 
-    return rowWin() || columnWin() || diagWin()
+    return rowWin() || columnWin() || diagWin() || false
    }
 
-   const win = (winner) => {
-    console.log(winner.name+' gano!') 
+   const addResultMessage = (winner) => {
+    const resultMessage = document.createElement('p')
+    if (winner == 'tie') {
+        resultMessage.textContent = `It's a tie!`
+    }
+    else {
+        resultMessage.textContent = `${winner.name} wins!`
+        resultMessage.style.color = winner.color
+    }
+
+    const messageContainer = document.querySelector('#result-container')
+    messageContainer.appendChild(resultMessage)
+}
+
+   const win = (winner, line) => {
+    const updateScore = (player) => {
+        player.score += 1;
+        const playerContainer = document.querySelector(`#player${player.index}`);
+        const playerScoreElement = playerContainer.querySelector('.player-score');
+        playerScoreElement.textContent = 'Score: '+player.score
+    }
+
+    const addWinToCells = (line) => {
+        for (let i = 0 ; i < line.length ; i++) {
+            line[i].winner = true
+        }
+    updateScore(winner)
+    addResultMessage(winner)
+    }
+
+    
+    addWinToCells(line)
+    gameBoard.updateBoard()
     endGame()
    }
 
    const endGame = () => {
-    gameBoard.removeEventListener()
+    gameBoard.removeListenerOnAllBoard()
    }
 
-   const tie = () => {
-    console.log('its a tie!')
-    endGame()
-   }
+   const tie = false
 
    return {
     player1,
     player2,
     activePlayer,
     changeActivePlayer,
-    aiPlaying,
     checkIfWin,
     newGame,
     playerMove,
+    aiMove,
     undoMove,
     tie,
    }
     
 })();
-
 
 
 const buttons = (() => {
@@ -409,13 +512,82 @@ const buttons = (() => {
         btnContainer.appendChild(newGameBtn)
     }
 
+    const difficultyListener = (e) => {
+        if (e.target.checked) {
+            if (e.target.id.slice(-1) == '1') {
+                game.player1.difficulty = e.target.value
+            }
+            else if (e.target.id.slice(-1) == '2') {
+                game.player2.difficulty = e.target.value
+            }
+        }
+    }
+    
+    const difficultyBtn = document.querySelectorAll('.ai-button')
+    for (let i = 0 ; i < difficultyBtn.length; i++) {
+        difficultyBtn[i].addEventListener('change', difficultyListener)
+    }
+
+    const playerOneAiCheckbox = document.getElementById("toggle-player1")
+    const playerTwoAiCheckbox = document.getElementById("toggle-player2")
+
+    playerOneAiCheckbox.addEventListener('change', game.player1.enableOrDisableAi.bind(game.player1));
+    playerTwoAiCheckbox.addEventListener('change', game.player2.enableOrDisableAi.bind(game.player2));
+
+
+    const editButton = document.querySelectorAll('.edit-name')
+
+    const editNameListener = (e) => {
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text'
+        const displayName = e.target.previousElementSibling
+        
+        if (e.target.parentNode.parentNode.id == 'player1') {
+            nameInput.value = game.player1.name
+        }
+        else if (e.target.parentNode.parentNode.id == 'player2') {
+            nameInput.value = game.player2.name
+        }
+    
+        const setName = (e) => {
+            if (e.target.parentNode.parentNode.id == 'player1') {
+                game.player1.name = nameInput.value
+            }
+            else if (e.target.parentNode.parentNode.id == 'player2') {
+                game.player2.name = nameInput.value
+            }
+            displayName.textContent = nameInput.value
+            e.target.parentNode.replaceChild(displayName, e.target)
+        }
+    
+        const handleKeyDown = (event) => {
+            if (event.key === 'Enter') {
+                setName(event);
+            }
+        }
+    
+        nameInput.addEventListener('keydown', handleKeyDown)
+        nameInput.addEventListener('blur', setName)
+        e.target.parentNode.replaceChild(nameInput, e.target.previousElementSibling)  
+        nameInput.focus()
+    }
+    
+    const addEditListener = () => {
+        for (let i = 0 ; i < editButton.length; i++) {
+            editButton[i].addEventListener('click', editNameListener)
+        }
+    }
+    
+
     return {
-        createNewGameBtn
+        createNewGameBtn,
+        addEditListener
     }
 })()
 
 buttons.createNewGameBtn()
+buttons.addEditListener()
+game.newGame()
 
-test = () => {
-   return game.player2.ai.selectedMove()
-}
+
+

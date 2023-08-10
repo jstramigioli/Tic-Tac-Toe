@@ -15,8 +15,54 @@
         <header>
             <h1 id="title">Tic-Tac-Toe</h1>
         </header>
-        <div id="board-container"></div>
-        <div id="button-container"></div>
+        <div id="game-container">
+            <div id="player1" class="player-container">
+                <div class="name-container">
+                    <p class="player-name">Player 1</p>
+                    <button class="edit-name">
+                       <object data="img/edit-button.svg" type="image/svg+xml" class="edit-icon"></object>
+                    </button>
+                </div>
+                <p class="player-score">Score: 0</p>
+                <div class="cpu-container">
+                    <h3>CPU</h3>
+                    <input type="checkbox" id="toggle-player1" /><label for="toggle-player1"></label>
+                </div>
+                <div class="ai-button-container">
+                    <input type="radio" name="difficulty-p1" id="easy-p1" value="Easy" class="ai-button">
+                    <label for="easy-p1">Easy</label>
+                    <input type="radio" name="difficulty-p1" id="intermediate-p1" value="Intermediate" class="ai-button" checked>
+                    <label for="intermediate-p1">Intermediate</label>
+                    <input type="radio" name="difficulty-p1" id="hard-p1" value="Hard" class="ai-button">
+                    <label for="hard-p1">Hard</label>
+                </div>
+            </div>
+            <div id="board-container"></div>
+            <div id="player2" class="player-container">
+                <div class="name-container">
+                    <p class="player-name">Player 2</p>
+                    <button class="edit-name">
+                        <object data="img/edit-button.svg" style="fill: var(--board-color);"  type="image/svg+xml" class="edit-icon"></object>
+                    </button>
+                </div>
+                <p class="player-score">Score: 0</p>
+                <div class="cpu-container">
+                    <h3>CPU</h3>
+                    <input type="checkbox" id="toggle-player2" /><label for="toggle-player2"></label>
+                </div>
+                <div class="ai-button-container">
+                    <input type="radio" name="difficulty-p2" id="easy-p2" value="Easy" class="ai-button">
+                    <label for="easy-p2">Easy</label>
+                    <input type="radio" name="difficulty-p2" id="intermediate-p2" value="Intermediate" class="ai-button" checked>
+                    <label for="intermediate-p2">Intermediate</label>
+                    <input type="radio" name="difficulty-p2" id="hard-p2" value="Hard" class="ai-button">
+                    <label for="hard-p2">Hard</label>
+                </div>
+            </div>
+        </div>
+        <div id="result-container"></div>
+        <div id="button-container">
+        </div>
     </div>
 </body>
 </html>
